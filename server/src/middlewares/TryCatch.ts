@@ -7,8 +7,11 @@ function TryCatch(handler: any) {
     } catch (error) {
       console.log(error);
       if (error instanceof Error) {
-        res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
       }
+      return res
+        .status(500)
+        .json({ success: false, message: "Something went wrong!" });
     }
   };
 }

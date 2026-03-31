@@ -9,7 +9,8 @@ const PORT = process.env.PORT || 80;
 const DB_URL = process.env.DB_URL || "";
 
 const app = express();
-
+app.use(express.json());
+// mongo-sanitize
 //Importing Routers
 app.use("/api/v1", userRouter);
 

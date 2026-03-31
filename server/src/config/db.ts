@@ -1,8 +1,9 @@
-import { connect } from "mongoose";
+import { connect, set } from "mongoose";
 
 async function ConnectDB(url: string) {
   try {
     await connect(url);
+    set("sanitizeFilter", true);
     console.log("Database connected");
   } catch (error) {
     console.log(error);
