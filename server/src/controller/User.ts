@@ -8,6 +8,12 @@ import sendMail from "../lib/sendEmail";
 import client from "../config/redis";
 import UserModel from "../models/userModel";
 import { getOtpHtml, getVerifyEmailHtml } from "../config/html";
+import {
+  generateAccesssToken,
+  generateToken,
+  verifyRefreshToken,
+} from "../config/generateToken";
+import { JwtPayload } from "jsonwebtoken";
 
 const registerUser = TryCatch(async (req: Request, res: Response) => {
   const { error } = validateRegister(req.body);
@@ -91,6 +97,7 @@ const verifyuser = TryCatch(async (req: Request, res: Response) => {
 });
 
 const loginUser = TryCatch(async (req: Request, res: Response) => {
+  await client.del("user:69cd127108cc14038ce78ffd");
   const { error } = validateLogin(req.body);
   if (error) {
     return res
@@ -126,6 +133,7 @@ const loginUser = TryCatch(async (req: Request, res: Response) => {
     expiration: { type: "EX", value: 300 },
   });
   const subject = "OTP for verification";
+  console.log("OTP", otp);
   const HTML = getOtpHtml(email, otp);
   await sendMail(email, subject, HTML);
   await client.set(rateLimitKey, "true", {
@@ -149,6 +157,7 @@ const verifyOTP = TryCatch(async (req: Request, res: Response) => {
 
   const otpKey = `otp:${email}`;
   const otpValue = await client.get(otpKey);
+  console.log(otpValue);
   if (!otpValue) {
     return res.status(400).json({ success: false, message: "OTP expired" });
   }
@@ -161,9 +170,43 @@ const verifyOTP = TryCatch(async (req: Request, res: Response) => {
   if (!user) {
     return res.status(400).json({ success: false, message: "Invalid Email" });
   }
+  const tokenData = await generateToken(user._id.toString(), res);
 
-  return res.status(200).json({ success: false, message: "OTP" });
-  // }
+  return res
+    .status(200)
+    .json({ success: true, message: "OTP verified successfully", user });
 });
 
-export { registerUser, verifyuser, loginUser, verifyOTP };
+const myProfile = TryCatch(async (req: Request, res: Response) => {
+  const user = req.user;
+  return res.json(user);
+});
+
+const refresh_token = TryCatch(async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    return res
+      .status(401)
+      .json({ success: false, message: "invalid refresh token" });
+  }
+  const decode = await verifyRefreshToken(refreshToken);
+
+  if (!decode) {
+    return res
+      .status(401)
+      .json({ success: false, message: "invalid refresh token" });
+  }
+
+  generateAccesssToken((decode as JwtPayload)._id, res);
+
+  return res.status(200).json({ success: true, message: "Token refresh" });
+});
+
+export {
+  registerUser,
+  verifyuser,
+  loginUser,
+  verifyOTP,
+  myProfile,
+  refresh_token,
+};
