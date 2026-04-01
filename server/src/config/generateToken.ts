@@ -57,4 +57,13 @@ async function generateAccesssToken(_id: string, res: Response) {
   });
 }
 
-export { generateToken, verifyRefreshToken, generateAccesssToken };
+async function revokeRefreshToken(_id: string) {
+  await client.del(`refresh_token:${_id}`);
+}
+
+export {
+  generateToken,
+  verifyRefreshToken,
+  generateAccesssToken,
+  revokeRefreshToken,
+};

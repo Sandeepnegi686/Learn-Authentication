@@ -11,6 +11,7 @@ import { getOtpHtml, getVerifyEmailHtml } from "../config/html";
 import {
   generateAccesssToken,
   generateToken,
+  revokeRefreshToken,
   verifyRefreshToken,
 } from "../config/generateToken";
 import { JwtPayload } from "jsonwebtoken";
@@ -202,6 +203,16 @@ const refresh_token = TryCatch(async (req: Request, res: Response) => {
   return res.status(200).json({ success: true, message: "Token refresh" });
 });
 
+const logoutUser = TryCatch(async (req: Request, res: Response) => {
+  await revokeRefreshToken(req.user._id);
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+  await client.del(`user:${req.user._id}`);
+  return res
+    .status(200)
+    .json({ success: true, message: "Logout successfully" });
+});
+
 export {
   registerUser,
   verifyuser,
@@ -209,4 +220,5 @@ export {
   verifyOTP,
   myProfile,
   refresh_token,
+  logoutUser,
 };
