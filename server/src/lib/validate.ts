@@ -13,4 +13,12 @@ function validateRegister(data: {
   return schema.validate(data);
 }
 
-export { validateRegister };
+function validateLogin(data: { email: string; password: string }) {
+  const schema = joi.object({
+    email: joi.string().email().lowercase().trim().required(),
+    password: joi.string().min(6).required(),
+  });
+  return schema.validate(data);
+}
+
+export { validateRegister, validateLogin };

@@ -3,7 +3,8 @@ import dotenv from "dotenv";
 
 import ConnectDB from "./config/db";
 import userRouter from "./routes/user";
-dotenv.config();
+import client from "./config/redis";
+dotenv.config({ quiet: true });
 
 const PORT = process.env.PORT || 80;
 const DB_URL = process.env.DB_URL || "";
