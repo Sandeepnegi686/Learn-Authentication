@@ -22,8 +22,15 @@ app.use(
     methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
   }),
 );
+
+//LOGGER
+app.use("/", (req, res, next) => {
+  console.log(`${req.method} request on ${req.url}`);
+  next();
+});
 // mongo-sanitize
 //Importing Routers
+
 app.use("/api/v1", userRouter);
 
 app.listen(PORT, () => {

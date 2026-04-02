@@ -9,6 +9,7 @@ import {
   verifyuser,
 } from "../controller/User";
 import { isAuth } from "../middlewares/isAuth";
+
 const router = express.Router();
 
 router.post("/register", registerUser);

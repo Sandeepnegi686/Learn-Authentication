@@ -16,24 +16,19 @@ export default function Login({ VITE_SERVER_URL }: LoginProps) {
   const submitHandler = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      console.log(email, password);
-
       try {
         const res = await axios.post(`${VITE_SERVER_URL}/api/v1/login`, {
           email,
           password,
         });
-        console.log(res);
         if (res.data.success) {
           toast.success(res.data.message);
-          console.log(res.data.user.email);
           localStorage.setItem("email", email);
           navigate("/verifyOTP");
         } else {
           toast.error(res.data.message);
         }
       } catch (error) {
-        // console.log(error);
         if (error instanceof AxiosError) {
           const errMsg =
             error?.response?.data.message || "Something went wrong";
