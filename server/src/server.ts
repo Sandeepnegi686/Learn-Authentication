@@ -1,5 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 import dotenv from "dotenv";
 
@@ -14,6 +15,13 @@ const DB_URL = process.env.DB_URL || "";
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+  }),
+);
 // mongo-sanitize
 //Importing Routers
 app.use("/api/v1", userRouter);

@@ -130,7 +130,7 @@ const loginUser = TryCatch(async (req: Request, res: Response) => {
   }
   const otpKey = `otp:${email}`;
   const otp = Math.floor(Math.random() * 900000 + 100000).toString();
-  await client.set(otpKey, JSON.stringify(otp), {
+  await client.set(otpKey, otp, {
     expiration: { type: "EX", value: 300 },
   });
   const subject = "OTP for verification";
@@ -158,12 +158,12 @@ const verifyOTP = TryCatch(async (req: Request, res: Response) => {
 
   const otpKey = `otp:${email}`;
   const otpValue = await client.get(otpKey);
-  console.log(otpValue);
+
   if (!otpValue) {
     return res.status(400).json({ success: false, message: "OTP expired" });
   }
   const storedOTP = JSON.parse(otpValue);
-  if (storedOTP !== otp) {
+  if (storedOTP != otp) {
     return res.status(400).json({ success: false, message: "Wrong OTP" });
   }
   await client.del(otpKey);

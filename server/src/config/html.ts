@@ -189,7 +189,7 @@ Use the verification code below to complete your sign-in to Authentication App.
 };
 export const getVerifyEmailHtml = (email: string, token: string) => {
   const appName = process.env.APP_NAME || "Authentication App";
-  const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const baseUrl = process.env.CLIENT_URL || "";
   const verifyUrl = `${baseUrl.replace(/\/+$/, "")}/token/${encodeURIComponent(
     token,
   )}`;
