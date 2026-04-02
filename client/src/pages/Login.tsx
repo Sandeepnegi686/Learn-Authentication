@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
-import { useCallback, useState, FormEvent } from "react";
+import { useCallback, useState } from "react";
+import type { FormEvent } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
