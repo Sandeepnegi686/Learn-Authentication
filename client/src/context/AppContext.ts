@@ -14,6 +14,7 @@ export interface AppContextType {
   setUser: React.Dispatch<React.SetStateAction<UserType | null>>;
   isAuth: boolean;
   setIsAuth: React.Dispatch<React.SetStateAction<boolean>>;
+  logoutUser: () => void;
 }
 
 export const APP_CONTEXT = createContext<AppContextType | null>(null);

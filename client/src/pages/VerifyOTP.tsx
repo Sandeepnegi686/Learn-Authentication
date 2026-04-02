@@ -29,7 +29,7 @@ export default function VerifyOTP({ VITE_SERVER_URL }: VerifyOTPProps) {
         if (res.data.success) {
           toast.success(res.data.message);
           localStorage.removeItem("email");
-          navigate("/verifyOTP");
+          navigate("/");
         } else {
           toast.error(res.data.message);
         }
