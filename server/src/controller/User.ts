@@ -15,6 +15,7 @@ import {
   verifyRefreshToken,
 } from "../config/generateToken";
 import { JwtPayload } from "jsonwebtoken";
+import { generateCSRFToken } from "../config/csrfMiddlewares";
 
 const registerUser = TryCatch(async (req: Request, res: Response) => {
   const { error } = validateRegister(req.body);
@@ -171,7 +172,7 @@ const verifyOTP = TryCatch(async (req: Request, res: Response) => {
   if (!user) {
     return res.status(400).json({ success: false, message: "Invalid Email" });
   }
-  const tokenData = await generateToken(user._id.toString(), res);
+  await generateToken(user._id.toString(), res);
 
   return res
     .status(200)
@@ -207,10 +208,21 @@ const logoutUser = TryCatch(async (req: Request, res: Response) => {
   await revokeRefreshToken(req.user._id);
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
+  res.clearCookie("csrfToken");
   await client.del(`user:${req.user._id}`);
   return res
     .status(200)
     .json({ success: true, message: "Logout successfully" });
+});
+
+const refreshCSRFToken = TryCatch(async (req: Request, res: Response) => {
+  const userId = req.user._id;
+  const newCSRFToken = await generateCSRFToken(userId, res);
+  res.status(200).json({
+    success: true,
+    message: "CSRF Token refreshed",
+    CSRFToken: newCSRFToken,
+  });
 });
 
 export {
@@ -221,4 +233,5 @@ export {
   myProfile,
   refresh_token,
   logoutUser,
+  refreshCSRFToken,
 };

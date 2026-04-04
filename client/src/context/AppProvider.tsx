@@ -8,16 +8,20 @@ const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
 export function APP_PROVIDER({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
   const [isAuth, setIsAuth] = useState(false);
+  console.log(isAuth);
 
-  async function fetchUser() {
-    try {
-      const { data } = await api.get(`${VITE_SERVER_URL}/api/v1/me`);
-      return data;
-    } catch (error) {
-      console.log(error);
-      return null;
-    }
-  }
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const { data } = await api.get(`${VITE_SERVER_URL}/api/v1/me`);
+        setUser(data);
+        setIsAuth(true);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   async function logoutUser() {
     try {
@@ -29,13 +33,6 @@ export function APP_PROVIDER({ children }: { children: React.ReactNode }) {
       toast.error("something went wrong");
     }
   }
-
-  useEffect(() => {
-    fetchUser().then((user) => {
-      setUser(user);
-      setIsAuth(true);
-    });
-  }, []);
 
   return (
     <APP_CONTEXT.Provider

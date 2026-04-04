@@ -2,6 +2,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import dotenv from "dotenv";
 import { Response } from "express";
 import client from "./redis";
+import { generateCSRFToken, revokecsrfToken } from "./csrfMiddlewares";
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || "";
@@ -29,7 +30,9 @@ async function generateToken(id: string, res: Response) {
     sameSite: "none",
     secure: true,
   });
-  return { accessToken, refreshToken };
+  const csrfToken = await generateCSRFToken(id, res);
+  console.log(csrfToken);
+  return { accessToken, refreshToken, csrfToken };
 }
 
 async function verifyRefreshToken(refreshToken: string) {
@@ -59,6 +62,7 @@ async function generateAccesssToken(_id: string, res: Response) {
 
 async function revokeRefreshToken(_id: string) {
   await client.del(`refresh_token:${_id}`);
+  await revokecsrfToken(_id);
 }
 
 export {
