@@ -30,7 +30,9 @@ const registerUser = TryCatch(async (req: Request, res: Response) => {
   const keyPresent = await client.get(rateLimitKey);
 
   if (keyPresent) {
-    return res.status(429).json({ success: false, message: "To many request" });
+    return res
+      .status(429)
+      .json({ success: false, message: "Too many request" });
   }
   const existingUser = await UserModel.findOne({
     email: sanitizeFilter(email),
@@ -172,16 +174,35 @@ const verifyOTP = TryCatch(async (req: Request, res: Response) => {
   if (!user) {
     return res.status(400).json({ success: false, message: "Invalid Email" });
   }
-  await generateToken(user._id.toString(), res);
+  const tokenData = await generateToken(user._id.toString(), res);
 
-  return res
-    .status(200)
-    .json({ success: true, message: "OTP verified successfully", user });
+  return res.status(200).json({
+    success: true,
+    message: "OTP verified successfully",
+    user,
+    sessionInfo: {
+      sessionId: tokenData.sessionId,
+      loginTime: new Date().toISOString(),
+      csrfToken: tokenData.csrfToken,
+    },
+  });
 });
 
 const myProfile = TryCatch(async (req: Request, res: Response) => {
   const user = req.user;
-  return res.json(user);
+  const sessionId = await req.sessionId;
+  const sessionData = await client.get(`session:${sessionId}`);
+  let sessionInfo = null;
+  if (sessionData) {
+    const parshedSession = JSON.parse(sessionData);
+    sessionInfo = {
+      sessionId,
+      loginTime: parshedSession.createdAt,
+      lastActivity: parshedSession.lastActivity,
+    };
+  }
+
+  return res.json({ user, sessionInfo });
 });
 
 const refresh_token = TryCatch(async (req: Request, res: Response) => {
@@ -194,12 +215,19 @@ const refresh_token = TryCatch(async (req: Request, res: Response) => {
   const decode = await verifyRefreshToken(refreshToken);
 
   if (!decode) {
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    res.clearCookie("csrfToken");
     return res
       .status(401)
-      .json({ success: false, message: "invalid refresh token" });
+      .json({ success: false, message: "invalid session expired" });
   }
 
-  generateAccesssToken((decode as JwtPayload)._id, res);
+  await generateAccesssToken(
+    (decode as JwtPayload)._id,
+    (decode as JwtPayload).sessionId,
+    res,
+  );
 
   return res.status(200).json({ success: true, message: "Token refresh" });
 });
@@ -225,6 +253,10 @@ const refreshCSRFToken = TryCatch(async (req: Request, res: Response) => {
   });
 });
 
+const adminController = TryCatch(async (req: Request, res: Response) => {
+  return res.status(200).json({ success: true, message: "you are authorized" });
+});
+
 export {
   registerUser,
   verifyuser,
@@ -234,4 +266,5 @@ export {
   refresh_token,
   logoutUser,
   refreshCSRFToken,
+  adminController,
 };

@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import {
+  adminController,
   loginUser,
   logoutUser,
   myProfile,
@@ -8,7 +9,7 @@ import {
   verifyOTP,
   verifyuser,
 } from "../controller/User";
-import { isAuth } from "../middlewares/isAuth";
+import { authorizedAdmin, isAuth } from "../middlewares/isAuth";
 import { refreshCSRFToken, verifyCSRFToken } from "../config/csrfMiddlewares";
 import UserModel from "../models/userModel";
 
@@ -30,7 +31,6 @@ router.post("/logout", isAuth, verifyCSRFToken, logoutUser);
 router.post("/refresh-csrf", isAuth, refreshCSRFToken);
 
 router.post("/update-name", isAuth, async (req: Request, res: Response) => {
-  console.log(req.body);
   const updatedUser = await UserModel.findByIdAndUpdate(
     req.user._id,
     { name: req.body.name },
@@ -38,5 +38,7 @@ router.post("/update-name", isAuth, async (req: Request, res: Response) => {
   );
   return res.status(200).json({ success: true, message: "name is updated" });
 });
+
+router.get("/admin", isAuth, authorizedAdmin, adminController);
 
 export default router;

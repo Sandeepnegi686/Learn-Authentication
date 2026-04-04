@@ -17,6 +17,8 @@ export function APP_PROVIDER({ children }: { children: React.ReactNode }) {
         setUser(data);
         setIsAuth(true);
       } catch (error) {
+        setIsAuth(false);
+        setUser(null);
         console.log(error);
       }
     };
@@ -27,6 +29,7 @@ export function APP_PROVIDER({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await api.post("/api/v1/logout");
       toast.success(data.message);
+      setUser(null);
       setIsAuth(false);
     } catch (error) {
       console.log(error);

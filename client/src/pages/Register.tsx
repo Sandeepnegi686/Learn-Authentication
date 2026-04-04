@@ -1,4 +1,6 @@
-import { useState } from "react";
+import axios, { AxiosError } from "axios";
+import { useCallback, useState, type FormEvent } from "react";
+import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 
 interface RegisterProps {
@@ -9,6 +11,35 @@ export default function Register({ VITE_SERVER_URL }: RegisterProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const submitHandler = useCallback(
+    async (e: any) => {
+      e.preventDefault();
+      try {
+        const res = await axios.post(`${VITE_SERVER_URL}/api/v1/register`, {
+          email,
+          password,
+          name,
+        });
+        if (res.data.success) {
+          toast.success(res.data.message);
+          localStorage.setItem("email", email);
+          setName("");
+          setEmail("");
+          setPassword("");
+        } else {
+          toast.error(res.data.message);
+        }
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          const errMsg =
+            error?.response?.data.message || "Something went wrong";
+          toast.error(errMsg);
+        }
+      }
+    },
+    [VITE_SERVER_URL, email, password, name],
+  );
 
   return (
     <section className="text-gray-600 body-font">
@@ -71,7 +102,10 @@ export default function Register({ VITE_SERVER_URL }: RegisterProps) {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button className="text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg">
+          <button
+            className="text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg"
+            onClick={submitHandler}
+          >
             Register
           </button>
           <Link className="text-xs text-gray-500 mt-3" to={"/login"}>

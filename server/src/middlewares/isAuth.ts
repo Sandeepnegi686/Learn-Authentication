@@ -3,11 +3,13 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import dotenv from "dotenv";
 import client from "../config/redis";
 import UserModel from "../models/userModel";
+import { isSessionActive } from "../config/generateToken";
 
 declare global {
   namespace Express {
     interface Request {
       user?: any;
+      sessionId?: string;
     }
   }
 }
@@ -27,14 +29,25 @@ async function isAuth(req: Request, res: Response, next: NextFunction) {
     if (!decodedData) {
       return res.status(403).json({ success: false, message: "Token expired" });
     }
-    const cacheUser = await client.get(
-      `user:${(decodedData as JwtPayload)._id}`,
-    );
+    const decoded = decodedData as JwtPayload;
+
+    const sessionActive = await isSessionActive(decoded._id, decoded.sessionId);
+    if (!sessionActive) {
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+      res.clearCookie("csrfToken");
+      return res
+        .status(401)
+        .json({ success: false, message: "Session expired" });
+    }
+
+    const cacheUser = await client.get(`user:${decoded._id}`);
     if (cacheUser) {
       req.user = JSON.parse(cacheUser);
+      req.sessionId = decoded.sessionId;
       return next();
     }
-    const user = await UserModel.findById((decodedData as JwtPayload)._id);
+    const user = await UserModel.findById(decoded._id);
 
     await client.setEx(
       `user:${(user as JwtPayload)._id}`,
@@ -42,10 +55,26 @@ async function isAuth(req: Request, res: Response, next: NextFunction) {
       JSON.stringify(user),
     );
     req.user = user;
+    req.sessionId = decoded.sessionId;
     next();
   } catch (error) {
     console.log(error);
   }
 }
 
-export { isAuth };
+async function authorizedAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const user = req.user;
+  if (user.role !== "admin") {
+    return res.status(401).json({
+      success: false,
+      message: "You are not allowed for this activity.",
+    });
+  }
+  next();
+}
+
+export { isAuth, authorizedAdmin };

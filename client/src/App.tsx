@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import { Toaster } from "react-hot-toast";
 import VerifyOTP from "./pages/VerifyOTP";
 import { useAppContext } from "./context/AppContext.tsx";
+import Verify from "./pages/Verify.tsx";
 
 const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
 // console.log(VITE_SERVER_URL);
@@ -20,7 +21,6 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
-          {/* <Route path="/" element={<Dashboard />} /> */}
           <Route
             path={"/"}
             element={
@@ -28,6 +28,26 @@ function App() {
                 <Dashboard />
               ) : (
                 <Login VITE_SERVER_URL={VITE_SERVER_URL} />
+              )
+            }
+          />
+          <Route
+            path={"/login"}
+            element={
+              isAuth ? (
+                <Dashboard />
+              ) : (
+                <Login VITE_SERVER_URL={VITE_SERVER_URL} />
+              )
+            }
+          />
+          <Route
+            path={"/register"}
+            element={
+              isAuth ? (
+                <Dashboard />
+              ) : (
+                <Register VITE_SERVER_URL={VITE_SERVER_URL} />
               )
             }
           />
@@ -42,14 +62,8 @@ function App() {
             }
           />
           <Route
-            path={"/register"}
-            element={
-              isAuth ? (
-                <Dashboard />
-              ) : (
-                <Register VITE_SERVER_URL={VITE_SERVER_URL} />
-              )
-            }
+            path={"/token/:token"}
+            element={<Verify VITE_SERVER_URL={VITE_SERVER_URL} />}
           />
         </Routes>
       </BrowserRouter>
